@@ -5,27 +5,8 @@ import matplotlib.pyplot as plt
 from ipywidgets import Text, Button, VBox, HBox, Output, Layout
 from IPython.display import display, clear_output
 
-G = nx.Graph()
+G = nx.DiGraph()
 output = Output()
-
-def malgrange_dfs(grafo):
-    visitados = set()
-    componentes = []
-
-    def dfs(no, comp):
-        visitados.add(no)
-        comp.append(no)
-        for vizinho in grafo.neighbors(no):
-            if vizinho not in visitados:
-                dfs(vizinho, comp)
-
-    for no in grafo.nodes():
-        if no not in visitados:
-            comp_corrente = []
-            dfs(no, comp_corrente)
-            componentes.append(comp_corrente)
-
-    return componentes
 
 def desenhar_grafo(grupos=None):
     plt.figure(figsize=(8,6))
@@ -38,9 +19,9 @@ def desenhar_grafo(grupos=None):
                 node_group[nodo] = idx
         for node in G.nodes():
             color_map.append(node_group.get(node, -1))
-        nx.draw(G, pos, with_labels=True, node_color=color_map, cmap=plt.cm.Set1, node_size=800, font_size=12)
+        nx.draw(G, pos, with_labels=True, arrows=True, node_color=color_map, cmap=plt.cm.Set1, node_size=800, font_size=12)
     else:
-        nx.draw(G, pos, with_labels=True, node_color='blue', node_size=800, font_size=12)
+        nx.draw(G, pos, with_labels=True, arrows=True, node_color='blue', node_size=800, font_size=12)
     plt.show()
 
 def add_user(name):
@@ -51,19 +32,18 @@ def add_user(name):
         return
     if name in G.nodes:
         with output:
-            print(f'Participante "{name}" já existe no grafo.')
+            print(f'Participante "{name}" jÃ¡ existe no grafo.')
         return
     G.add_node(name)
     with output:
         print(f'Participante adicionado: {name}')
-    desenhar_grafo()
 
 def add_connection(p1, p2):
     p1 = p1.strip()
     p2 = p2.strip()
     if p1 == p2:
         with output:
-            print('A ligação deve ser entre dois participantes diferentes!')
+            print('A ligaÃ§Ã£o deve ser entre dois participantes diferentes!')
         return
     if not (p1 in G.nodes and p2 in G.nodes):
         with output:
@@ -71,15 +51,14 @@ def add_connection(p1, p2):
         return
     if G.has_edge(p1, p2):
         with output:
-            print(f'Ligação entre "{p1}" e "{p2}" já existe.')
+            print(f'LigaÃ§Ã£o de "{p1}" para "{p2}" jÃ¡ existe.')
         return
     G.add_edge(p1, p2)
     with output:
-        print(f'Aresta/ligação criada entre: {p1} e {p2}')
-    desenhar_grafo()
+        print(f'Aresta/ligaÃ§Ã£o criada entre: {p1} -> {p2}')
 
 def detectar_panelinhas():
-    panelinhas = malgrange_dfs(G)
+    panelinhas = list(nx.strongly_connected_components(G))
     with output:
         clear_output()
         print('Panelinhas/grupos encontrados:')
@@ -92,14 +71,13 @@ def resetar():
     with output:
         clear_output()
         print("Grafo reiniciado!")
-    desenhar_grafo()
 
 user_box = Text(placeholder='Nome do participante', description='Participante:', layout=Layout(width='60%'))
 user_btn = Button(description='Adicionar participante', button_style='success')
 
-conn_box1 = Text(placeholder='Participante 1', description='De:', layout=Layout(width='40%'))
-conn_box2 = Text(placeholder='Participante 2', description='Para:', layout=Layout(width='40%'))
-conn_btn = Button(description='Adicionar ligação', button_style='info')
+conn_box1 = Text(placeholder='Participante 1', description='0(a):', layout=Layout(width='45%'))
+conn_box2 = Text(placeholder='Participante 2', description='Segue:', layout=Layout(width='45%'))
+conn_btn = Button(description='Adicionar ligaÃ§Ã£o', button_style='info')
 
 panelinha_btn = Button(description='Detectar Panelinhas', button_style='primary')
 reset_btn = Button(description='Reiniciar grafo', button_style='danger')
@@ -136,7 +114,3 @@ ui = VBox([
 ])
 
 display(ui)
-desenhar_grafo()
-
-
-
