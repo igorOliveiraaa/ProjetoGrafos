@@ -1,5 +1,3 @@
-!pip install networkx matplotlib ipywidgets --quiet
-
 import networkx as nx
 import matplotlib.pyplot as plt
 from ipywidgets import Text, Button, VBox, HBox, Output, Layout
@@ -57,8 +55,49 @@ def add_connection(p1, p2):
     with output:
         print(f'Aresta/ligação criada entre: {p1} -> {p2}')
 
+def kosaraju_strongly_connected_components(graph):
+    stack = []
+    visited = set()
+
+    graph_dict = {node: list(graph.successors(node)) for node in graph.nodes()}
+
+    def dfs_first(v):
+        visited.add(v)
+        for nbr in graph_dict.get(v, []):
+            if nbr not in visited:
+                dfs_first(nbr)
+        stack.append(v)
+
+    for node in graph.nodes():
+        if node not in visited:
+            dfs_first(node)
+
+    reversed_graph = {node: [] for node in graph.nodes()}
+    for u in graph.nodes():
+        for v in graph.successors(u):
+            reversed_graph[v].append(u)
+
+    visited.clear()
+    scc = []
+
+    def dfs_second(v, component):
+        visited.add(v)
+        component.append(v)
+        for nbr in reversed_graph.get(v, []):
+            if nbr not in visited:
+                dfs_second(nbr, component)
+
+    while stack:
+        node = stack.pop()
+        if node not in visited:
+            component = []
+            dfs_second(node, component)
+            scc.append(component)
+
+    return scc
+
 def detectar_panelinhas():
-    panelinhas = list(nx.strongly_connected_components(G))
+    panelinhas = kosaraju_strongly_connected_components(G)
     with output:
         clear_output()
         print('Panelinhas/grupos encontrados:')
